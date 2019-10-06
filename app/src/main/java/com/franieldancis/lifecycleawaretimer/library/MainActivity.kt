@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.Observer
 import com.franieldancis.lifecycleawaretimer.R
-import com.franieldancis.testlib.main.LifecycleAwareTimer
+import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {

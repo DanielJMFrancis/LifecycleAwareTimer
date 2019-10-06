@@ -1,7 +1,7 @@
 package com.franieldancis.lifecycleawaretimer.di
 
 import android.app.Application
-import com.franieldancis.testlib.main.LifecycleAwareTimer
+import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer
 
 class TimerApplication : Application() {
     override fun onCreate() {

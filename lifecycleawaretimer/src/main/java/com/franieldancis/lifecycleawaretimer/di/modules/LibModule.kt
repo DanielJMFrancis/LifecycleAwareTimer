@@ -1,4 +1,4 @@
-package com.franieldancis.testlib.di.modules
+package com.franieldancis.lifecycleawaretimer.di.modules
 
 import android.content.Context
 import android.content.SharedPreferences

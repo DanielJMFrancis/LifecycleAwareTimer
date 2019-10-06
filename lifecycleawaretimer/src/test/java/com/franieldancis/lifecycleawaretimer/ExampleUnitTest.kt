@@ -1,4 +1,4 @@
-package com.franieldancis.testlib
+package com.franieldancis.lifecycleawaretimer
 
 import org.junit.Test
 

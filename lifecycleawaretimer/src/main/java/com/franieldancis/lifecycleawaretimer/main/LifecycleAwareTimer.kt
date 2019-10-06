@@ -1,12 +1,12 @@
-package com.franieldancis.testlib.main
+package com.franieldancis.lifecycleawaretimer.main
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.*
-import com.franieldancis.testlib.di.DaggerLibComponent
-import com.franieldancis.testlib.di.LibComponent
+import com.franieldancis.lifecycleawaretimer.di.DaggerLibComponent
+import com.franieldancis.lifecycleawaretimer.di.LibComponent
 import com.squareup.inject.assisted.Assisted
 import com.squareup.inject.assisted.AssistedInject
 
@@ -137,7 +137,7 @@ class LifecycleAwareTimer @AssistedInject constructor(
 
         /**
          * Get an instance of LifecycleAwareTimer.
-         * @see com.franieldancis.testlib.main.LifecycleAwareTimer
+         * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer
          * @param lifecycle - the lifecycle object (e.g. from Activity or Fragment) the timer will observe
          * */
         fun getInstance(lifecycle: Lifecycle): LifecycleAwareTimer {

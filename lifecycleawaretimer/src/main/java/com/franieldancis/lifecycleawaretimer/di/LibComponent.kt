@@ -1,9 +1,9 @@
-package com.franieldancis.testlib.di
+package com.franieldancis.lifecycleawaretimer.di
 
 import android.content.Context
-import com.franieldancis.testlib.di.modules.LibModule
-import com.franieldancis.testlib.main.LifecycleAwareTimer
-import com.franieldancis.testlib.main.TimerStatus
+import com.franieldancis.lifecycleawaretimer.di.modules.LibModule
+import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer
+import com.franieldancis.lifecycleawaretimer.main.TimerStatus
 import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Provider

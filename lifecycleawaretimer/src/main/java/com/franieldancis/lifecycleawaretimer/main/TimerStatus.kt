@@ -1,8 +1,8 @@
-package com.franieldancis.testlib.main
+package com.franieldancis.lifecycleawaretimer.main
 
 import android.content.SharedPreferences
-import com.franieldancis.testlib.main.LifecycleAwareTimer.Companion.PREFS_MINUTES_KEY
-import com.franieldancis.testlib.main.LifecycleAwareTimer.Companion.PREFS_SECONDS_KEY
+import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.PREFS_MINUTES_KEY
+import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.PREFS_SECONDS_KEY
 import javax.inject.Inject
 
 class TimerStatus @Inject constructor(
