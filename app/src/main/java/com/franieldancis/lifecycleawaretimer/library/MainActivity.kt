@@ -19,6 +19,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         timer.run {
+            days.observe(this@MainActivity, Observer {
+                timerDays.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
+            })
+            hours.observe(this@MainActivity, Observer {
+                timerHours.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
+            })
             minutes.observe(this@MainActivity, Observer {
                 timerMinutes.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
             })
