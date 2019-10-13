@@ -7,7 +7,7 @@ import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.
 import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.PREFS_SECONDS_KEY
 import javax.inject.Inject
 
-class TimerStatus @Inject constructor(
+internal class TimerStatus @Inject constructor(
     private val sharedPreferences: SharedPreferences
 ) {
     internal fun isTimerOut(prefsKey: String? = null): Boolean {

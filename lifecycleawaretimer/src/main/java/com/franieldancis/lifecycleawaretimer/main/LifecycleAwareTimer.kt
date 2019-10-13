@@ -10,7 +10,17 @@ import com.franieldancis.lifecycleawaretimer.di.LibComponent
 import com.squareup.inject.assisted.Assisted
 import com.squareup.inject.assisted.AssistedInject
 
-class LifecycleAwareTimer @AssistedInject constructor(
+/**
+ * Implementation of a android.os.CountDownTimer that only runs when its androidx.lifecycle.Lifecycle is resumed.
+ *
+ * @implNote - Initiate the library using the companion object's init() function with your application's context.
+ * @constructor - Constructor is made private to prevent direct instantiation. Use getInstance() function to obtain
+ * instance of LifecycleAwareTimer.
+ *
+ * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.init
+ * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.getInstance
+ * */
+class LifecycleAwareTimer @AssistedInject private constructor(
     @Assisted val lifecycle: Lifecycle,
     @Assisted val prefsKey: String? = null,
     private val sharedPreferences: SharedPreferences,
@@ -81,7 +91,7 @@ class LifecycleAwareTimer @AssistedInject constructor(
             .putLong(PREFS_DAYS_KEY + prefsKey, _days.value ?: 0)
             .putLong(PREFS_HOURS_KEY + prefsKey, _hours.value ?: 0)
             .putLong(PREFS_MINUTES_KEY + prefsKey, _minutes.value ?: 0)
-            .putLong(PREFS_SECONDS_KEY + prefsKey, _seconds.value?.plus(1) ?: 0)
+            .putLong(PREFS_SECONDS_KEY + prefsKey, _seconds.value?.plus(1) ?: 0) // Add 1 second to the value saved to offset time lost in pausing the timer
             .apply()
         countdownTimer.cancel()
     }
@@ -94,6 +104,10 @@ class LifecycleAwareTimer @AssistedInject constructor(
     // endregion
 
     // region Time setters
+    /**
+     * Set the number of days on the timer. @return true if set successfully.
+     * @param numberOfDays - the number of days to set left on the timer
+     * */
     fun setDays(numberOfDays: Long): Boolean {
         return try {
             timerStatus.setTimerDays(numberOfDays, prefsKey)
@@ -109,6 +123,10 @@ class LifecycleAwareTimer @AssistedInject constructor(
         }
     }
 
+    /**
+     * Set the number of hours left on the timer. @return true if set successfully.
+     * @param numberOfHours - the number of hours to set left on the timer
+     * */
     fun setHours(numberOfHours: Long): Boolean {
         return try {
             timerStatus.setTimerHours(numberOfHours, prefsKey)
@@ -124,6 +142,10 @@ class LifecycleAwareTimer @AssistedInject constructor(
         }
     }
 
+    /**
+     * Set the number of minutes left on the timer. @return true if set successfully.
+     * @param numberOfMinutes - the number of minutes to set left on the timer
+     * */
     fun setMinutes(numberOfMinutes: Long): Boolean {
         return try {
             timerStatus.setTimerMinutes(numberOfMinutes, prefsKey)
@@ -139,6 +161,10 @@ class LifecycleAwareTimer @AssistedInject constructor(
         }
     }
 
+    /**
+     * Set the number of seconds left on the timer. @return true if set successfully.
+     * @param numberOfSeconds - the number of seconds to set left on the timer
+     * */
     fun setSeconds(numberOfSeconds: Long): Boolean {
         return try {
             timerStatus.setTimerSeconds(numberOfSeconds, prefsKey)
