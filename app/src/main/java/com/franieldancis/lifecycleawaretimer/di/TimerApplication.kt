@@ -7,6 +7,7 @@ class TimerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // Initiate library
         LifecycleAwareTimer.init(this)
     }
 }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".library.MainActivity">
+    tools:context=".example.MainActivity">
 
     <TextView
         android:id="@+id/timerDays"
@@ -98,11 +98,99 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="50" />
 
+    <TextView
+        android:id="@+id/timerDays2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/timerSeparatorDays2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/timerDays"
+        tools:text="50" />
+
+    <TextView
+        android:id="@+id/timerSeparatorDays2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=":"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/timerHours2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/timerDays2"
+        app:layout_constraintTop_toBottomOf="@id/timerDays" />
+
+    <TextView
+        android:id="@+id/timerHours2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/timerSeparatorHours2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/timerSeparatorDays2"
+        app:layout_constraintTop_toBottomOf="@id/timerDays"
+        tools:text="50" />
+
+    <TextView
+        android:id="@+id/timerSeparatorHours2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=":"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/timerMinutes2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/timerHours2"
+        app:layout_constraintTop_toBottomOf="@id/timerDays" />
+
+    <TextView
+        android:id="@+id/timerMinutes2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/timerSeparator2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/timerSeparatorHours2"
+        app:layout_constraintTop_toBottomOf="@id/timerDays"
+        tools:text="50" />
+
+    <TextView
+        android:id="@+id/timerSeparator2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=":"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/timerSeconds2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/timerMinutes2"
+        app:layout_constraintTop_toBottomOf="@id/timerDays" />
+
+    <TextView
+        android:id="@+id/timerSeconds2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/timerSeparator2"
+        app:layout_constraintTop_toBottomOf="@id/timerDays"
+        tools:text="50" />
+
     <Button
         android:id="@+id/testButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="testFunction"
-        android:text="Test" />
+        android:text="Reset timers"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timerSeparatorHours2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

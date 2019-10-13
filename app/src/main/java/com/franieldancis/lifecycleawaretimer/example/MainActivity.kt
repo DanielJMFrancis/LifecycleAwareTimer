@@ -1,4 +1,4 @@
-package com.franieldancis.lifecycleawaretimer.library
+package com.franieldancis.lifecycleawaretimer.example
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -10,6 +10,10 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private val timer: LifecycleAwareTimer by lazy {
+        LifecycleAwareTimer.getInstance(this.lifecycle, "test key")
+    }
+
+    private val timer2: LifecycleAwareTimer by lazy {
         LifecycleAwareTimer.getInstance(this.lifecycle)
     }
 
@@ -34,10 +38,31 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
+        timer2.run {
+            days.observe(this@MainActivity, Observer {
+                timerDays2.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
+            })
+            hours.observe(this@MainActivity, Observer {
+                timerHours2.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
+            })
+            minutes.observe(this@MainActivity, Observer {
+                timerMinutes2.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
+            })
+
+            seconds.observe(this@MainActivity, Observer {
+                timerSeconds2.text = String.format(ZERO_PAD_FORMAT_PATTERN, it)
+            })
+        }
+
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun testFunction(view: View) {
-        timer.setMinutes(5)
+        timer.setMinutes(0)
+        timer2.run {
+            setMinutes(0)
+            setSeconds(0)
+        }
     }
 
     companion object {
