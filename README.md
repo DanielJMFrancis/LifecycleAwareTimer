@@ -21,7 +21,7 @@ In your dependencies (app-level `build.gradle`):
 
 ```groovy
 dependencies {
-    implementation 'com.github.DanielJMFrancis:LifecycleAwareTimer:LATEST_VERSION' // -27a8f3829f-1
+    implementation 'com.github.DanielJMFrancis:LifecycleAwareTimer:LATEST_VERSION'
 }
 ```
 
