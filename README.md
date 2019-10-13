@@ -11,9 +11,9 @@ In your root `build.gradle` file:
 ```groovy
 allprojects {
     repositories {
-		...
+    	...
         maven { url 'https://jitpack.io' }
-	}
+    }
 }
 ```
 
