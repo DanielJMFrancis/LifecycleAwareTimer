@@ -1,9 +1,29 @@
+[![](https://jitpack.io/v/DanielJMFrancis/LifecycleAwareTimer.svg)](https://jitpack.io/#DanielJMFrancis/LifecycleAwareTimer)
 # LifecycleAwareTimer
 
 A lifecycle-aware, persistant CountDownTimer with callbacks to the current saved time.
 Hooks into SharedPreferences and supports creation of multiple timers by preference key.
 
 ## Getting Started
+
+In your root `build.gradle` file:
+
+```groovy
+allprojects {
+    repositories {
+		...
+        maven { url 'https://jitpack.io' }
+	}
+}
+```
+
+In your dependencies (app-level `build.gradle`):
+
+```groovy
+dependencies {
+    implementation 'com.github.DanielJMFrancis:LifecycleAwareTimer:LATEST_VERSION' // -27a8f3829f-1
+}
+```
 
 Initiate the library in your application class (or wherever you'd like) using your application's context.
 
