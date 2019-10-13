@@ -275,9 +275,10 @@ class LifecycleAwareTimer @AssistedInject internal constructor(
 
         /**
          * @return If the timer is out of time
+         * @param prefsKey - The preference identifier for the timer to be checked
          * */
-        fun isTimerOutOfTime(): Boolean {
-            return component.timerStatus.get().isTimerOut()
+        fun isTimerOutOfTime(prefsKey: String = ""): Boolean {
+            return component.timerStatus.get().isTimerOut(prefsKey)
         }
 
         /**
