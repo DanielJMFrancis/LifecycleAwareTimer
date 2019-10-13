@@ -187,7 +187,7 @@
         android:id="@+id/testButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="testFunction"
+        android:onClick="resetTimer"
         android:text="Reset timers"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

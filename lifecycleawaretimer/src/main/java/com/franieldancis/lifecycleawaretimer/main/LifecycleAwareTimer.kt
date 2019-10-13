@@ -20,9 +20,9 @@ import com.squareup.inject.assisted.AssistedInject
  * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.init
  * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.getInstance
  * */
-class LifecycleAwareTimer @AssistedInject private constructor(
+class LifecycleAwareTimer @AssistedInject internal constructor(
     @Assisted val lifecycle: Lifecycle,
-    @Assisted val prefsKey: String? = null,
+    @Assisted val prefsKey: String = "",
     private val sharedPreferences: SharedPreferences,
     private val timerStatus: TimerStatus
 ) : LifecycleObserver {
@@ -73,7 +73,7 @@ class LifecycleAwareTimer @AssistedInject private constructor(
         val hoursInSeconds = hoursValue * SECONDS_IN_HOUR
         val minutesInSeconds = minutesValue * SECONDS_IN_MINUTE
 
-        // Special case: emit "zero" values to LiveData
+        // Special case: emit "zero" values to LiveData when preference data is zero
         if (daysValue == 0L) _days.postValue(0)
         if (hoursValue == 0L) _hours.postValue(0)
         if (minutesValue == 0L) _minutes.postValue(0)
@@ -108,9 +108,10 @@ class LifecycleAwareTimer @AssistedInject private constructor(
      * Set the number of days on the timer. @return true if set successfully.
      * @param numberOfDays - the number of days to set left on the timer
      * */
-    fun setDays(numberOfDays: Long): Boolean {
+    fun setActiveDays(numberOfDays: Long): Boolean {
         return try {
-            timerStatus.setTimerDays(numberOfDays, prefsKey)
+            // Update days
+            timerStatus.setTimerDays(numberOfDays, prefsKey, true)
 
             // Cancel and restart CountDownTimer
             cancelAndRestartTimer()
@@ -127,9 +128,10 @@ class LifecycleAwareTimer @AssistedInject private constructor(
      * Set the number of hours left on the timer. @return true if set successfully.
      * @param numberOfHours - the number of hours to set left on the timer
      * */
-    fun setHours(numberOfHours: Long): Boolean {
+    fun setActiveHours(numberOfHours: Long): Boolean {
         return try {
-            timerStatus.setTimerHours(numberOfHours, prefsKey)
+            // Set hours
+            timerStatus.setTimerHours(numberOfHours, prefsKey, true)
 
             // Cancel and restart CountDownTimer
             cancelAndRestartTimer()
@@ -146,9 +148,10 @@ class LifecycleAwareTimer @AssistedInject private constructor(
      * Set the number of minutes left on the timer. @return true if set successfully.
      * @param numberOfMinutes - the number of minutes to set left on the timer
      * */
-    fun setMinutes(numberOfMinutes: Long): Boolean {
+    fun setActiveMinutes(numberOfMinutes: Long): Boolean {
         return try {
-            timerStatus.setTimerMinutes(numberOfMinutes, prefsKey)
+            // Set minutes
+            timerStatus.setTimerMinutes(numberOfMinutes, prefsKey, true)
 
             // Cancel and restart CountDownTimer
             cancelAndRestartTimer()
@@ -165,9 +168,10 @@ class LifecycleAwareTimer @AssistedInject private constructor(
      * Set the number of seconds left on the timer. @return true if set successfully.
      * @param numberOfSeconds - the number of seconds to set left on the timer
      * */
-    fun setSeconds(numberOfSeconds: Long): Boolean {
+    fun setActiveSeconds(numberOfSeconds: Long): Boolean {
         return try {
-            timerStatus.setTimerSeconds(numberOfSeconds, prefsKey)
+            // Set seconds
+            timerStatus.setTimerSeconds(numberOfSeconds, prefsKey, true)
 
             // Cancel and restart CountDownTimer
             cancelAndRestartTimer()
@@ -218,12 +222,21 @@ class LifecycleAwareTimer @AssistedInject private constructor(
                 // Post values if they've changed from their current values
                 if (_minutes.value != minutesLeft) {
                     _minutes.postValue(minutesLeft)
+
+                    // Update minutes preference
+                    timerStatus.setTimerMinutes(minutesLeft, prefsKey, true)
                 }
                 if (_hours.value != hoursLeft) {
                     _hours.postValue(hoursLeft)
+
+                    // Update hours preference
+                    timerStatus.setTimerHours(hoursLeft, prefsKey, true)
                 }
                 if (_days.value != daysLeft) {
                     _days.postValue(daysLeft)
+
+                    // Update days preference
+                    timerStatus.setTimerDays(daysLeft, prefsKey, true)
                 }
             }
         }
@@ -256,7 +269,7 @@ class LifecycleAwareTimer @AssistedInject private constructor(
          * @param lifecycle - the lifecycle object (e.g. from Activity or Fragment) the timer will observe
          * @param prefsKey - the key to save time preferences under (in order to track times for different keys)
          * */
-        fun getInstance(lifecycle: Lifecycle, prefsKey: String? = null): LifecycleAwareTimer {
+        fun getInstance(lifecycle: Lifecycle, prefsKey: String = ""): LifecycleAwareTimer {
             return component.timerFactory.get().create(lifecycle, prefsKey)
         }
 
@@ -267,6 +280,51 @@ class LifecycleAwareTimer @AssistedInject private constructor(
             return component.timerStatus.get().isTimerOut()
         }
 
+        /**
+         * Set the number of days for a timer.
+         * @param numDays - number of days to set left on the timer
+         * @param prefsKey - the SharedPreference key to identify which timer it is for
+         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
+         * @implNote - Don't use this method to set the time on an active timer
+         * */
+        fun setDays(numDays: Long, prefsKey: String = "", forceSet: Boolean = false) {
+            component.timerStatus.get().setTimerDays(numDays, prefsKey, forceSet)
+        }
+
+        /**
+         * Set the number of hours for a timer.
+         * @param numHours - number of hours to set left on the timer
+         * @param prefsKey - the SharedPreference key to identify which timer it is for
+         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
+         * @implNote - Don't use this method to set the time on an active timer
+         * */
+        fun setHours(numHours: Long, prefsKey: String = "", forceSet: Boolean = false) {
+            component.timerStatus.get().setTimerHours(numHours, prefsKey, forceSet)
+        }
+
+        /**
+         * Set the number of minutes for a timer.
+         * @param numMinutes - number of minutes to set left on the timer
+         * @param prefsKey - the SharedPreference key to identify which timer it is for
+         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
+         * @implNote - Don't use this method to set the time on an active timer
+         * */
+        fun setMinutes(numMinutes: Long, prefsKey: String = "", forceSet: Boolean = false) {
+            component.timerStatus.get().setTimerMinutes(numMinutes, prefsKey, forceSet)
+        }
+
+        /**
+         * Set the number of seconds for a timer.
+         * @param numSeconds - number of seconds to set left on the timer
+         * @param prefsKey - the SharedPreference key to identify which timer it is for
+         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
+         * @implNote - Don't use this method to set the time on an active timer
+         * */
+        fun setSeconds(numSeconds: Long, prefsKey: String = "", forceSet: Boolean = false) {
+            component.timerStatus.get().setTimerSeconds(numSeconds, prefsKey, forceSet)
+        }
+
+        // region SharedPreference Keys
         /**
          * SharedPreferences key for the number of days left
          * */
@@ -286,7 +344,9 @@ class LifecycleAwareTimer @AssistedInject private constructor(
          * SharedPreferences key for the number of seconds left
          * */
         internal const val PREFS_SECONDS_KEY = "LIFECYCLE_TIMER_SECONDS"
+        // endregion
 
+        // region Default initial timer values
         /**
          * Default number of days on timer if days preference is not set.
          * */
@@ -306,6 +366,7 @@ class LifecycleAwareTimer @AssistedInject private constructor(
          * Default number of seconds (not including minutes) on timer if seconds preference is not set
          * */
         internal const val DEFAULT_NUM_SECONDS_TIMER = 0L
+        // endregion
 
         // region time constants
         private const val SECONDS_IN_DAY = 864_000L

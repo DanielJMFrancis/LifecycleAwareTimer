@@ -7,10 +7,14 @@ import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.
 import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.PREFS_SECONDS_KEY
 import javax.inject.Inject
 
+/**
+ * Class for getting and setting the status of a LifecycleAwareTimer's time values.
+ * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer
+ * */
 internal class TimerStatus @Inject constructor(
     private val sharedPreferences: SharedPreferences
 ) {
-    internal fun isTimerOut(prefsKey: String? = null): Boolean {
+    internal fun isTimerOut(prefsKey: String = ""): Boolean {
         sharedPreferences.run {
             val days = getLong(PREFS_DAYS_KEY + prefsKey, 0)
             val hours = getLong(PREFS_HOURS_KEY + prefsKey, 0)
@@ -21,27 +25,48 @@ internal class TimerStatus @Inject constructor(
         }
     }
 
-    internal fun setTimerDays(days: Long, prefsKey: String? = null) {
-        sharedPreferences.edit()
-            .putLong(PREFS_DAYS_KEY + prefsKey, days)
-            .apply()
+    internal fun setTimerDays(days: Long, prefsKey: String = "", forceSet: Boolean = false) {
+        // If preference already exists
+        val containsPref = sharedPreferences.contains(PREFS_DAYS_KEY + prefsKey)
+
+        if (forceSet || !containsPref) {
+            sharedPreferences.edit()
+                .putLong(PREFS_DAYS_KEY + prefsKey, days)
+                .apply()
+        }
     }
 
-    internal fun setTimerHours(hours: Long, prefsKey: String? = null) {
-        sharedPreferences.edit()
-            .putLong(PREFS_HOURS_KEY + prefsKey, hours)
-            .apply()
+    internal fun setTimerHours(hours: Long, prefsKey: String = "", forceSet: Boolean = false) {
+        // If preference already exists
+        val containsPref = sharedPreferences.contains(PREFS_HOURS_KEY + prefsKey)
+
+        if (forceSet || !containsPref) {
+            sharedPreferences.edit()
+                .putLong(PREFS_HOURS_KEY + prefsKey, hours)
+                .apply()
+        }
     }
 
-    internal fun setTimerMinutes(minutes: Long, prefsKey: String? = null) {
-        sharedPreferences.edit()
-            .putLong(PREFS_MINUTES_KEY + prefsKey, minutes)
-            .apply()
+    internal fun setTimerMinutes(minutes: Long, prefsKey: String = "", forceSet: Boolean = false) {
+        // If preference already exists
+        val containsPref = sharedPreferences.contains(PREFS_MINUTES_KEY + prefsKey)
+
+        if (forceSet || !containsPref) {
+            sharedPreferences.edit()
+                .putLong(PREFS_MINUTES_KEY + prefsKey, minutes)
+                .apply()
+        }
     }
 
-    internal fun setTimerSeconds(seconds: Long, prefsKey: String? = null) {
-        sharedPreferences.edit()
-            .putLong(PREFS_SECONDS_KEY + prefsKey, seconds)
-            .apply()
+    internal fun setTimerSeconds(seconds: Long, prefsKey: String = "", forceSet: Boolean = false) {
+        // If preference already exists
+        val containsPref = sharedPreferences.contains(PREFS_SECONDS_KEY + prefsKey)
+
+        if (forceSet || !containsPref) {
+            sharedPreferences.edit()
+                // Offset value of seconds being set by one to prevent timer going down immediately after new seconds value is set
+                .putLong(PREFS_SECONDS_KEY + prefsKey, seconds + 1)
+                .apply()
+        }
     }
 }

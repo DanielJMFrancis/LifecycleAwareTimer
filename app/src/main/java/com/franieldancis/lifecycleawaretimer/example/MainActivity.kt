@@ -10,17 +10,32 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private val timer: LifecycleAwareTimer by lazy {
-        LifecycleAwareTimer.getInstance(this.lifecycle, "test key")
+        LifecycleAwareTimer.getInstance(this.lifecycle)
     }
 
     private val timer2: LifecycleAwareTimer by lazy {
-        LifecycleAwareTimer.getInstance(this.lifecycle)
+        LifecycleAwareTimer.getInstance(this.lifecycle, EXAMPLE_TIMER_KEY)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+
+        // Set initial time for both timers
+        LifecycleAwareTimer.run {
+            // Timer 1 - no preference key associated with it
+            setDays(1)
+            setHours(1)
+            setMinutes(1)
+            setSeconds(5)
+
+            // Timer 2 - preference key associated
+            setDays(2, timer2.prefsKey)
+            setHours(2, timer2.prefsKey)
+            setMinutes(2, timer2.prefsKey)
+            setSeconds(30, timer2.prefsKey)
+        }
 
         timer.run {
             days.observe(this@MainActivity, Observer {
@@ -57,11 +72,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun testFunction(view: View) {
-        timer.setMinutes(0)
+    fun resetTimer(view: View) {
+        timer.run {
+            setActiveDays(1)
+            setActiveHours(1)
+            setActiveMinutes(1)
+            setActiveSeconds(5)
+        }
         timer2.run {
-            setMinutes(0)
-            setSeconds(0)
+            setActiveDays(2)
+            setActiveHours(2)
+            setActiveMinutes(2)
+            setActiveSeconds(30)
         }
     }
 
@@ -70,6 +92,11 @@ class MainActivity : AppCompatActivity() {
          * Format string for zero-padding seconds and minutes
          * */
         private const val ZERO_PAD_FORMAT_PATTERN = "%02d"
+
+        /**
+         * Example timer key value
+         * */
+        const val EXAMPLE_TIMER_KEY = "EXAMPLE_TIMER_KEY"
     }
 
 }
