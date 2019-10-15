@@ -60,11 +60,11 @@ class ExampleActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_example)
         
-        timer.seconds.observe(this, *Observer* { secondsInCurrentMinute ->
+        timer.seconds.observe(this, Observer { secondsInCurrentMinute ->
             secondsTextView.text = secondsInCurrentMinute
         })
         
-        timer.hasTimerRunOut.observe(this, *Observer* { 
+        timer.hasTimerRunOut.observe(this, Observer { 
             Toast.makeText(this, "Time is up!", Toast.LENGTH_SHORT).show()
         })
     }
