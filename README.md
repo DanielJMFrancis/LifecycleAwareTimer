@@ -1,4 +1,4 @@
-[![](https://jitpack.io/v/DanielJMFrancis/LifecycleAwareTimer.svg)](https://jitpack.io/#DanielJMFrancis/LifecycleAwareTimer)
+[![](https://jitpack.io/v/danieljmfrancis/lifecycleawaretimer.svg)](https://jitpack.io/#danieljmfrancis/lifecycleawaretimer)
 # LifecycleAwareTimer
 
 A lightweight, lifecycle-aware countdown-type timer with callbacks to the remaining time left on the timer and when it finishes.
