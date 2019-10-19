@@ -3,12 +3,8 @@ package com.franieldancis.lifecycleawaretimer.main
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.CountDownTimer
-import android.util.Log
 import androidx.lifecycle.*
-import com.franieldancis.lifecycleawaretimer.di.DaggerLibComponent
-import com.franieldancis.lifecycleawaretimer.di.LibComponent
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import java.util.concurrent.TimeUnit
 
 /**
  * Implementation of a android.os.CountDownTimer that only runs when its androidx.lifecycle.Lifecycle is resumed.
@@ -20,31 +16,17 @@ import com.squareup.inject.assisted.AssistedInject
  * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.init
  * @see com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer.Companion.getInstance
  * */
-class LifecycleAwareTimer @AssistedInject internal constructor(
-    @Assisted val lifecycle: Lifecycle,
-    @Assisted val prefsKey: String = "",
-    private val sharedPreferences: SharedPreferences,
-    private val timerStatus: TimerStatus
+class LifecycleAwareTimer internal constructor(
+    val lifecycle: Lifecycle,
+    val prefsKey: String = ""
 ) : LifecycleObserver {
-    // Second emissions
-    private val _seconds = MutableLiveData<Long>()
-    val seconds = _seconds as LiveData<Long>
-
-    // Minute emissions
-    private val _minutes = MutableLiveData<Long>()
-    val minutes = _minutes as LiveData<Long>
-
-    // Hour emissions
-    private val _hours = MutableLiveData<Long>()
-    val hours = _hours as LiveData<Long>
-
-    // Day emissions
-    private val _days = MutableLiveData<Long>()
-    val days = _days as LiveData<Long>
+    // Millisecond emissions
+    private val _milliseconds = MutableLiveData<Long>()
+    val milliseconds = _milliseconds as LiveData<Long>
 
     // Emit true when timer has run out
-    private val _hasTimerRunOut = MutableLiveData<Unit>()
-    val hasTimerRunOut = _hasTimerRunOut as LiveData<Unit>
+    private val _onFinish = MutableLiveData<Unit>()
+    val onFinish = _onFinish as LiveData<Unit>
 
     // CountDownTimer to track time going down
     private lateinit var countdownTimer: CountDownTimer
@@ -54,45 +36,28 @@ class LifecycleAwareTimer @AssistedInject internal constructor(
         lifecycle.addObserver(this)
     }
 
-    @AssistedInject.Factory
-    interface Factory {
-        fun create(lifecycle: Lifecycle, prefsKey: String? = null): LifecycleAwareTimer
-    }
-
     // region Lifecycle events
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onResume() {
-        // Fetch minute and second values from SharedPrefs
-        val daysValue = sharedPreferences.getLong(PREFS_DAYS_KEY + prefsKey, DEFAULT_NUM_DAYS_TIMER)
-        val hoursValue = sharedPreferences.getLong(PREFS_HOURS_KEY + prefsKey, DEFAULT_NUM_HOURS_TIMER)
-        val minutesValue = sharedPreferences.getLong(PREFS_MINUTES_KEY + prefsKey, DEFAULT_NUM_MINUTES_TIMER)
-        val secondsValue = sharedPreferences.getLong(PREFS_SECONDS_KEY + prefsKey, DEFAULT_NUM_SECONDS_TIMER)
+        // Fetch millisecond values from sharedPreferences
+        val millisecondsValue =
+            sharedPreferences.getLong(PREFS_MILLISECONDS_KEY + prefsKey, DEFAULT_NUM_MILLISECONDS_TIMER)
 
-        // Convert days, hours, and minutes to seconds
-        val daysInSeconds = daysValue * SECONDS_IN_DAY
-        val hoursInSeconds = hoursValue * SECONDS_IN_HOUR
-        val minutesInSeconds = minutesValue * SECONDS_IN_MINUTE
-
-        // Special case: emit "zero" values to LiveData when preference data is zero
-        if (daysValue == 0L) _days.postValue(0)
-        if (hoursValue == 0L) _hours.postValue(0)
-        if (minutesValue == 0L) _minutes.postValue(0)
-        if (secondsValue == 0L) _seconds.postValue(0)
+        // Special case: emit "zero" value to LiveData when preference data is zero
+        if (millisecondsValue == 0L) _milliseconds.postValue(0)
 
         // Create and start CountDownTimer with length of combined number of minutes and seconds
-        countdownTimer = createCountDownTimer(daysInSeconds + hoursInSeconds + minutesInSeconds + secondsValue)
+        countdownTimer = createCountDownTimer(millisecondsValue)
         countdownTimer.start()
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onPause() {
-        // Update SharedPreferences with current values
-        sharedPreferences.edit()
-            .putLong(PREFS_DAYS_KEY + prefsKey, _days.value ?: 0)
-            .putLong(PREFS_HOURS_KEY + prefsKey, _hours.value ?: 0)
-            .putLong(PREFS_MINUTES_KEY + prefsKey, _minutes.value ?: 0)
-            .putLong(PREFS_SECONDS_KEY + prefsKey, _seconds.value?.plus(1) ?: 0) // Add 1 second to the value saved to offset time lost in pausing the timer
-            .apply()
+        checkInitialized()
+
+        // Update timer's stored current milliseconds
+        timerStatus.setTimerMilliseconds(milliseconds.value ?: 0, prefsKey, true)
+
         countdownTimer.cancel()
     }
 
@@ -103,141 +68,53 @@ class LifecycleAwareTimer @AssistedInject internal constructor(
     }
     // endregion
 
-    // region Time setters
+    // region Time setter
     /**
-     * Set the number of days on the timer. @return true if set successfully.
-     * @param numberOfDays - the number of days to set left on the timer
+     * Set the time on an actively running timer, adding up all time values passed in to the function.
+     * @param milliseconds
+     * @param seconds
+     * @param minutes
+     * @param hours
+     * @param days
      * */
-    fun setActiveDays(numberOfDays: Long): Boolean {
-        return try {
-            // Update days
-            timerStatus.setTimerDays(numberOfDays, prefsKey, true)
+    fun setTimeLeftOnActiveTimer(
+        milliseconds: Long = 0,
+        seconds: Long = 0,
+        minutes: Long = 0,
+        hours: Long = 0,
+        days: Long = 0
+    ) {
+        checkInitialized()
 
-            // Cancel and restart CountDownTimer
-            cancelAndRestartTimer()
+        timerStatus.setTimerMilliseconds(milliseconds
+            .plus(TimeUnit.SECONDS.toMillis(seconds))
+            .plus(TimeUnit.MINUTES.toMillis(minutes))
+            .plus(TimeUnit.HOURS.toMillis(hours))
+            .plus(TimeUnit.DAYS.toMillis(days)),
+            prefsKey = prefsKey,
+            forceSet = true)
 
-            true
-        } catch (exception: Exception) {
-            Log.e(this.javaClass.name, exception.toString())
-
-            false
-        }
-    }
-
-    /**
-     * Set the number of hours left on the timer. @return true if set successfully.
-     * @param numberOfHours - the number of hours to set left on the timer
-     * */
-    fun setActiveHours(numberOfHours: Long): Boolean {
-        return try {
-            // Set hours
-            timerStatus.setTimerHours(numberOfHours, prefsKey, true)
-
-            // Cancel and restart CountDownTimer
-            cancelAndRestartTimer()
-
-            true
-        } catch (exception: Exception) {
-            Log.e(this.javaClass.name, exception.toString())
-
-            false
-        }
-    }
-
-    /**
-     * Set the number of minutes left on the timer. @return true if set successfully.
-     * @param numberOfMinutes - the number of minutes to set left on the timer
-     * */
-    fun setActiveMinutes(numberOfMinutes: Long): Boolean {
-        return try {
-            // Set minutes
-            timerStatus.setTimerMinutes(numberOfMinutes, prefsKey, true)
-
-            // Cancel and restart CountDownTimer
-            cancelAndRestartTimer()
-
-            true
-        } catch (exception: Exception) {
-            Log.e(this.javaClass.name, exception.toString())
-
-            false
-        }
-    }
-
-    /**
-     * Set the number of seconds left on the timer. @return true if set successfully.
-     * @param numberOfSeconds - the number of seconds to set left on the timer
-     * */
-    fun setActiveSeconds(numberOfSeconds: Long): Boolean {
-        return try {
-            // Set seconds
-            timerStatus.setTimerSeconds(numberOfSeconds, prefsKey, true)
-
-            // Cancel and restart CountDownTimer
-            cancelAndRestartTimer()
-
-            true
-        } catch (exception: Exception) {
-            Log.e(this.javaClass.name, exception.toString())
-
-            false
-        }
+        // Cancel restart the CountDownTimer
+        cancelAndRestartTimer()
     }
     // endregion
 
-    private fun createCountDownTimer(overallSeconds: Long): CountDownTimer {
-        return object : CountDownTimer(overallSeconds * MILLISECONDS_IN_SECOND, MILLISECONDS_IN_SECOND) {
+    private fun createCountDownTimer(overallMilliseconds: Long): CountDownTimer {
+        return object :
+            CountDownTimer(overallMilliseconds, MILLISECONDS_IN_SECOND) {
             override fun onFinish() {
                 // Update time stored
                 sharedPreferences.edit()
-                    .putLong(PREFS_DAYS_KEY + prefsKey, 0)
-                    .putLong(PREFS_HOURS_KEY + prefsKey, 0)
-                    .putLong(PREFS_MINUTES_KEY + prefsKey, 0)
-                    .putLong(PREFS_SECONDS_KEY + prefsKey, 0)
+                    .putLong(PREFS_MILLISECONDS_KEY + prefsKey, 0)
                     .apply()
 
                 // Emit that timer has run out
-                _hasTimerRunOut.postValue(Unit)
+                _onFinish.postValue(Unit)
             }
 
             override fun onTick(millisUntilFinished: Long) {
-                // Calculate overall seconds left
-                val overallSecondsLeft = millisUntilFinished / MILLISECONDS_IN_SECOND
-
-                // Convert to seconds left in minute
-                val secondsLeft = overallSecondsLeft % SECONDS_IN_MINUTE
-
-                // Convert to minutes left
-                val minutesLeft = overallSecondsLeft / SECONDS_IN_MINUTE % MINUTES_IN_HOUR
-
-                // Convert to hours left
-                val hoursLeft = overallSecondsLeft / SECONDS_IN_HOUR % HOURS_IN_DAY
-
-                // Convert to days left
-                val daysLeft = overallSecondsLeft / SECONDS_IN_DAY
-
                 // Post the seconds value
-                _seconds.postValue(secondsLeft)
-
-                // Post values if they've changed from their current values
-                if (_minutes.value != minutesLeft) {
-                    _minutes.postValue(minutesLeft)
-
-                    // Update minutes preference
-                    timerStatus.setTimerMinutes(minutesLeft, prefsKey, true)
-                }
-                if (_hours.value != hoursLeft) {
-                    _hours.postValue(hoursLeft)
-
-                    // Update hours preference
-                    timerStatus.setTimerHours(hoursLeft, prefsKey, true)
-                }
-                if (_days.value != daysLeft) {
-                    _days.postValue(daysLeft)
-
-                    // Update days preference
-                    timerStatus.setTimerDays(daysLeft, prefsKey, true)
-                }
+                _milliseconds.postValue(millisUntilFinished)
             }
         }
     }
@@ -251,16 +128,29 @@ class LifecycleAwareTimer @AssistedInject internal constructor(
     }
 
     companion object {
-        // Library component to be instantiated
-        private lateinit var component: LibComponent
+        // SharedPreference dependency
+        private lateinit var sharedPreferences: SharedPreferences
+        private lateinit var timerStatus: TimerStatus
+
+        // Library initialization flag
+        private var isInitialized = false
 
         /**
          * Function to initialize the library.
          * @param applicationContext - your application's context
          * */
         fun init(applicationContext: Context) {
-            component = DaggerLibComponent.factory()
-                .create(applicationContext)
+            // Set up SharedPreferences
+            sharedPreferences = applicationContext.getSharedPreferences(
+                SHARED_PREFERENCES_TIMER,
+                Context.MODE_PRIVATE
+            )
+
+            // Set up TimerStatus
+            timerStatus = TimerStatus(sharedPreferences)
+
+            // Update library initialization flag
+            isInitialized = true
         }
 
         /**
@@ -270,7 +160,7 @@ class LifecycleAwareTimer @AssistedInject internal constructor(
          * @param prefsKey - the key to save time preferences under (in order to track times for different keys)
          * */
         fun getInstance(lifecycle: Lifecycle, prefsKey: String = ""): LifecycleAwareTimer {
-            return component.timerFactory.get().create(lifecycle, prefsKey)
+            return LifecycleAwareTimer(lifecycle, prefsKey)
         }
 
         /**
@@ -278,104 +168,90 @@ class LifecycleAwareTimer @AssistedInject internal constructor(
          * @param prefsKey - The preference identifier for the timer to be checked
          * */
         fun isTimerOutOfTime(prefsKey: String = ""): Boolean {
-            return component.timerStatus.get().isTimerOut(prefsKey)
+            checkInitialized()
+
+            return timerStatus.isTimerOut(prefsKey)
         }
 
         /**
-         * Set the number of days for a timer.
-         * @param numDays - number of days to set left on the timer
-         * @param prefsKey - the SharedPreference key to identify which timer it is for
+         * Set the time on a timer, adding up all time values passed in to the function.
+         * @param prefsKey - string identifier for the timer
+         * @param milliseconds
+         * @param seconds
+         * @param minutes
+         * @param hours
+         * @param days
          * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
          * @implNote - Don't use this method to set the time on an active timer
          * */
-        fun setDays(numDays: Long, prefsKey: String = "", forceSet: Boolean = false) {
-            component.timerStatus.get().setTimerDays(numDays, prefsKey, forceSet)
+        fun setTimeLeft(
+            prefsKey: String = "",
+            milliseconds: Long = 0,
+            seconds: Long = 0,
+            minutes: Long = 0,
+            hours: Long = 0,
+            days: Long = 0,
+            forceSet: Boolean = false
+        ) {
+            checkInitialized()
+
+            timerStatus.setTimerMilliseconds(milliseconds
+                .plus(TimeUnit.SECONDS.toMillis(seconds))
+                .plus(TimeUnit.MINUTES.toMillis(minutes))
+                .plus(TimeUnit.HOURS.toMillis(hours))
+                .plus(TimeUnit.DAYS.toMillis(days)),
+                prefsKey = prefsKey,
+                forceSet = forceSet)
         }
 
         /**
-         * Set the number of hours for a timer.
-         * @param numHours - number of hours to set left on the timer
-         * @param prefsKey - the SharedPreference key to identify which timer it is for
-         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
-         * @implNote - Don't use this method to set the time on an active timer
+         * @return the time left on the current timer
+         * @param timeUnit - the {@link java.util.concurrent.TimeUnit} to return. Supports time units from milliseconds to days.
+         * @param prefsKey - string identifier for the timer
          * */
-        fun setHours(numHours: Long, prefsKey: String = "", forceSet: Boolean = false) {
-            component.timerStatus.get().setTimerHours(numHours, prefsKey, forceSet)
+        fun getTimeLeft(
+            timeUnit: TimeUnit,
+            prefsKey: String = ""
+        ): Long {
+            checkInitialized()
+
+            return timerStatus.getCurrentTime(timeUnit, prefsKey)
         }
 
         /**
-         * Set the number of minutes for a timer.
-         * @param numMinutes - number of minutes to set left on the timer
-         * @param prefsKey - the SharedPreference key to identify which timer it is for
-         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
-         * @implNote - Don't use this method to set the time on an active timer
+         * Private function to check if the library has been initialized.
+         * @throws UninitializedLibraryException when the library has not been initialized
          * */
-        fun setMinutes(numMinutes: Long, prefsKey: String = "", forceSet: Boolean = false) {
-            component.timerStatus.get().setTimerMinutes(numMinutes, prefsKey, forceSet)
-        }
-
-        /**
-         * Set the number of seconds for a timer.
-         * @param numSeconds - number of seconds to set left on the timer
-         * @param prefsKey - the SharedPreference key to identify which timer it is for
-         * @param forceSet - flag to forcefully set the value - true to set regardless of if the preference already exists, false to only set it when it doesn't already exist.
-         * @implNote - Don't use this method to set the time on an active timer
-         * */
-        fun setSeconds(numSeconds: Long, prefsKey: String = "", forceSet: Boolean = false) {
-            component.timerStatus.get().setTimerSeconds(numSeconds, prefsKey, forceSet)
+        private fun checkInitialized() {
+            if (!isInitialized)
+                throw UninitializedLibraryException("Library has not been initialized. Call LifecycleAwareTimer.init(applicationContext) before using the library.")
         }
 
         // region SharedPreference Keys
         /**
-         * SharedPreferences key for the number of days left
+         * File name for the library's SharedPreferences
+         * @see android.content.SharedPreferences
          * */
-        internal const val PREFS_DAYS_KEY = "LIFECYCLE_TIMER_DAYS"
+        private const val SHARED_PREFERENCES_TIMER = "franiel_dancis_shared_prefs"
 
         /**
-         * SharedPreferences key for the number of hours left
+         * SharedPreferences key for the overall number of milliseconds left
          * */
-        internal const val PREFS_HOURS_KEY = "LIFECYCLE_TIMER_HOURS"
-
-        /**
-         * SharedPreferences key for the number of minutes left
-         * */
-        internal const val PREFS_MINUTES_KEY = "LIFECYCLE_TIMER_MINUTES"
-
-        /**
-         * SharedPreferences key for the number of seconds left
-         * */
-        internal const val PREFS_SECONDS_KEY = "LIFECYCLE_TIMER_SECONDS"
+        internal const val PREFS_MILLISECONDS_KEY = "LIFECYCLE_TIMER_MILLISECONDS"
         // endregion
 
         // region Default initial timer values
         /**
-         * Default number of days on timer if days preference is not set.
-         * */
-        internal const val DEFAULT_NUM_DAYS_TIMER = 0L
-
-        /**
-         * Default number of hours on timer if hours preference is not set
-         * */
-        internal const val DEFAULT_NUM_HOURS_TIMER = 0L
-
-        /**
-         * Default number of minutes on timer if minutes preference is not set.
-         * */
-        internal const val DEFAULT_NUM_MINUTES_TIMER = 0L
-
-        /**
          * Default number of seconds (not including minutes) on timer if seconds preference is not set
          * */
-        internal const val DEFAULT_NUM_SECONDS_TIMER = 0L
+        internal const val DEFAULT_NUM_MILLISECONDS_TIMER = 0L
         // endregion
 
         // region time constants
-        private const val SECONDS_IN_DAY = 864_000L
-        private const val SECONDS_IN_HOUR = 3_600L
-        private const val SECONDS_IN_MINUTE = 60L
-        private const val MINUTES_IN_HOUR = 60L
-        private const val HOURS_IN_DAY = 24L
         private const val MILLISECONDS_IN_SECOND = 1_000L
         // endregion
     }
+
+    // Exception to denote the library has not been initialized
+    private class UninitializedLibraryException(string: String? = null) : Exception(string)
 }
