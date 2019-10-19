@@ -1,8 +1,13 @@
 [![](https://jitpack.io/v/DanielJMFrancis/LifecycleAwareTimer.svg)](https://jitpack.io/#DanielJMFrancis/LifecycleAwareTimer)
 # LifecycleAwareTimer
 
-- A lifecycle-aware, persistant CountDownTimer with callbacks to the current saved time
-- Hooks into SharedPreferences and supports creation of multiple distinct timers (by key identifier)
+A lightweight, lifecycle-aware countdown-type timer with callbacks to the remaining time left on the timer and when it finishes.
+
+Hooks into SharedPreferences and supports creation of multiple distinct timers (by string identifier).
+
+#### Example Use Cases
+- Create a timer for a user actively using a new feature (or feature set), reward or prompt them for feedback when the timer is up
+- Limit a free-version of a premium feature after a user has actively used the feature for X amount of time
 
 ## Getting Started
 
@@ -21,7 +26,7 @@ In your dependencies (app-level `build.gradle`):
 
 ```groovy
 dependencies {
-    implementation 'com.github.DanielJMFrancis:LifecycleAwareTimer:LATEST_VERSION'
+    implementation 'com.github.danieljmfrancis:lifecycleawaretimer:LATEST_VERSION'
 }
 ```
 
@@ -42,13 +47,13 @@ class TimerApplication : Application() {
 
 Obtain an instance of a LifecycleAwareTimer using the `LifecycleAwareTimer.getInstance()` function, passing in the lifecycle the timer is attached to, and optionally a String to identify the timer (and its corresponding stored time preferences).
 
-Set the timers initial time using the setter methods, e.g. `LifecycleAwareTimer.setDays(1, YOUR_TIMER_PREFERENCE_KEY)`
+Set a timer's initial time using the `setTimeLeft` function.
 
-**Note** - There is a third parameter, a `forceSet` boolean flag, indicating whether the time should be set if the preference value already exists (true if it should be set regardless, false if it should only be set if it doesn't already exist).
+**Note** - the `forceSet` boolean flag indicates whether the time should be set if the preference value already exists (true if it should be set regardless, false if it should only be set if it doesn't already exist).
 
 #### Observing the timer
 
-The timer exposes `LiveData` fields that emit the current values of the timer as it ticks, in addition to when it runs.
+The timer exposes `LiveData` fields, `milliseconds` for observing the number of milliseconds left, and `onFinish` for observing when the timer finishes. 
 
 ```kotlin
 class ExampleActivity : AppCompatActivity() {
@@ -60,8 +65,9 @@ class ExampleActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_example)
         
-        timer.seconds.observe(this, Observer { secondsInCurrentMinute ->
-            secondsTextView.text = secondsInCurrentMinute
+        timer.milliseconds.observe(this, Observer { millisecondsLeft ->
+            // Convert and display hours left
+            hoursTextView.text = (millisecondsLeft / 1000 / 60 / 60).toString()
         })
         
         timer.hasTimerRunOut.observe(this, Observer { 
@@ -71,20 +77,25 @@ class ExampleActivity : AppCompatActivity() {
 }
 ```
 
-**Note** - The timer emits the current second in the minute it's on, the current minute in the hour it's on, the current hour in the day it's on, and the day number it's on. You'll need to format these if you'd like to display them a specific way, e.g. with zero padding.
-
-Lastly, there is a function for returning a boolean indicating if the timer is out of time: 
-`LifecycleAwareTimer.isTimerOutOfTime()` - this function takes the String identifier of the timer in question.
+There are also functions to get the current status of a timer:
+- `LifecycleAwareTimer.getTimeLeft(TimeUnit.MINUTE, "my_timer_key")`
+- `LifecycleAwareTimer.isTimerOutOfTime("my_timer_key")`
 
 #### Editing a timer's current time
 
-For active (running) timers, use the timer instance's `setActiveDays()`, `setActiveHours()`, `setActiveMinutes()`, and `setActiveSeconds()` functions. 
-
-Otherwise, for timers that are not running, use the `LifecycleAwareTimer` static functions, passing in the value to set, an identifier string for the timer, setting the `forceSet` boolean based on whether you want to set the value if it has already been set in the user's SharedPreferences.
+For active (running) timers, use a timer's `setTimeLeftOnActiveTimer()` function.
 
 ```kotlin
-// This will set the number of days for the TIME_IDENTIFIER_STRING timer, regardless of if they've already been set
-LifecycleAwareTimer.setDays(1, TIMER_IDENTIFIER_STRING, true)
+val myTimer = LifecycleAwareTimer.getInstance(myActivity.lifecycle, "my_timer_key")
+myTimer.setTimeLeftOnActiveTimer(seconds = 30)
+```
+
+Otherwise, use the `LifecycleAwareTimer.setTimeLeft()` function.
+
+```kotlin
+// This will set the number of seconds for the "my_timer_key" timer
+// regardless of if it has already been set
+LifecycleAwareTimer.setTimeLeft("my_timer_key", seconds = 30, forceSet = true)
 ```
 
 ## Contributing
