@@ -1,8 +1,8 @@
 [![](https://jitpack.io/v/DanielJMFrancis/LifecycleAwareTimer.svg)](https://jitpack.io/#DanielJMFrancis/LifecycleAwareTimer)
 # LifecycleAwareTimer
 
-A lifecycle-aware, persistant CountDownTimer with callbacks to the current saved time.
-Hooks into SharedPreferences and supports creation of multiple timers by preference key.
+- A lifecycle-aware, persistant CountDownTimer with callbacks to the current saved time
+- Hooks into SharedPreferences and supports creation of multiple distinct timers (by key identifier)
 
 ## Getting Started
 
@@ -48,7 +48,7 @@ Set the timers initial time using the setter methods, e.g. `LifecycleAwareTimer.
 
 #### Observing the timer
 
-The timer exposes `LiveData` fields that emit the current values of the timer as it ticks, in addition to when it run .
+The timer exposes `LiveData` fields that emit the current values of the timer as it ticks, in addition to when it runs.
 
 ```kotlin
 class ExampleActivity : AppCompatActivity() {
