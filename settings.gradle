@@ -1,2 +1,2 @@
-include ':app', ':lifecycleawaretimer'
+include ':sample', ':lifecycleawaretimer'
 rootProject.name='LifecycleAwareTimer'
