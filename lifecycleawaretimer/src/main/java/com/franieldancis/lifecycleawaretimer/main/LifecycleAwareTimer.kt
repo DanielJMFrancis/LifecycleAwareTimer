@@ -39,14 +39,19 @@ class LifecycleAwareTimer internal constructor(
     // region Lifecycle events
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onResume() {
+        checkInitialized()
+
         // Fetch millisecond values from sharedPreferences
         val millisecondsValue =
             sharedPreferences.getLong(PREFS_MILLISECONDS_KEY + prefsKey, DEFAULT_NUM_MILLISECONDS_TIMER)
 
         // Special case: emit "zero" value to LiveData when preference data is zero
-        if (millisecondsValue == 0L) _milliseconds.postValue(0)
+        if (millisecondsValue <= 0L) {
+            _milliseconds.postValue(0)
+            return
+        }
 
-        // Create and start CountDownTimer with length of combined number of minutes and seconds
+        // Create and start CountDownTimer only when milliseconds are greater than 0
         countdownTimer = createCountDownTimer(millisecondsValue)
         countdownTimer.start()
     }
@@ -58,7 +63,8 @@ class LifecycleAwareTimer internal constructor(
         // Update timer's stored current milliseconds
         timerStatus.setTimerMilliseconds(milliseconds.value ?: 0, prefsKey, true)
 
-        countdownTimer.cancel()
+        //  Cancel timer if it has been initialized
+        if (::countdownTimer.isInitialized) countdownTimer.cancel()
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
@@ -108,6 +114,9 @@ class LifecycleAwareTimer internal constructor(
                     .putLong(PREFS_MILLISECONDS_KEY + prefsKey, 0)
                     .apply()
 
+                // Post zero to milliseconds
+                _milliseconds.postValue(0)
+
                 // Emit that timer has run out
                 _onFinish.postValue(Unit)
             }
@@ -121,7 +130,9 @@ class LifecycleAwareTimer internal constructor(
 
     private fun cancelAndRestartTimer() {
         // Cancel current CountDownTimer
-        countdownTimer.cancel()
+        if (::countdownTimer.isInitialized) {
+            countdownTimer.cancel()
+        }
 
         // Go through onResume flow (to restart timer)
         onResume()

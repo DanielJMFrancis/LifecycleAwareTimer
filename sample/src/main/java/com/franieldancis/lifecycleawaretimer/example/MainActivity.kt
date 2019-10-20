@@ -9,6 +9,7 @@ import com.franieldancis.lifecycleawaretimer.R
 import com.franieldancis.lifecycleawaretimer.main.LifecycleAwareTimer
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
     private val timer: LifecycleAwareTimer by lazy {
@@ -39,7 +40,9 @@ class MainActivity : AppCompatActivity() {
                 val days = TimeUnit.MILLISECONDS.toDays(millisLeft)
                 val hours = TimeUnit.MILLISECONDS.toHours(millisLeft)
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisLeft)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(millisLeft)
+
+                // Round to closest second
+                val seconds = (millisLeft / 1000.0).roundToInt()
 
                 // Convert and display the time left on the timer
                 timerDays.text = String.format(ZERO_PAD_FORMAT_PATTERN, days)
@@ -60,7 +63,9 @@ class MainActivity : AppCompatActivity() {
                 val days = TimeUnit.MILLISECONDS.toDays(millisLeft)
                 val hours = TimeUnit.MILLISECONDS.toHours(millisLeft)
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisLeft)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(millisLeft)
+
+                // Round to closest second
+                val seconds = (millisLeft / 1000.0).roundToInt()
 
                 // Convert and display the time left on the timer
                 timerDays2.text = String.format(ZERO_PAD_FORMAT_PATTERN, days)
