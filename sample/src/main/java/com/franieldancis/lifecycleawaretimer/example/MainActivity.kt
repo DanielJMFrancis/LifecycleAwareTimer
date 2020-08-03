@@ -74,7 +74,6 @@ class MainActivity : AppCompatActivity() {
                 timerSeconds2.text = String.format(ZERO_PAD_FORMAT_PATTERN, seconds % 60)
             })
         }
-
     }
 
     @Suppress("UNUSED_PARAMETER")

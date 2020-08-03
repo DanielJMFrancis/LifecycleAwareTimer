@@ -3,6 +3,7 @@ package com.franieldancis.lifecycleawaretimer.main
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.lifecycle.*
 import java.util.concurrent.TimeUnit
 
@@ -61,7 +62,9 @@ class LifecycleAwareTimer internal constructor(
         checkInitialized()
 
         // Update timer's stored current milliseconds
-        timerStatus.setTimerMilliseconds(milliseconds.value ?: 0, prefsKey, true)
+        milliseconds.value?.let {
+                currentMillis -> timerStatus.setTimerMilliseconds(currentMillis, prefsKey, true)
+        } ?: Log.e(javaClass.name, "Error saving current milliseconds to preferences - milliseconds value is null")
 
         //  Cancel timer if it has been initialized
         if (::countdownTimer.isInitialized) countdownTimer.cancel()
@@ -102,6 +105,20 @@ class LifecycleAwareTimer internal constructor(
 
         // Cancel restart the CountDownTimer
         cancelAndRestartTimer()
+    }
+
+    /**
+     * Manual call to save the timer's current milliseconds
+     * (in any case your lifecycle owner's onPause would not be called before you'd like to access
+     * the timer elsewhere).
+     * */
+    fun saveCurrentTime() {
+        checkInitialized()
+
+        // Update timer's stored current milliseconds
+        milliseconds.value?.let {
+                currentMillis -> timerStatus.setTimerMilliseconds(currentMillis, prefsKey, true)
+        } ?: Log.e(javaClass.name, "Error saving current milliseconds to preferences - milliseconds value is null")
     }
     // endregion
 
